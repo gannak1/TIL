@@ -1,0 +1,63 @@
+옛날 : 영상처리 = 영상개선, 영상분할, 영상복원, 영상분류 2차원적인 이미지만 분석
+최근 : 컴퓨터 비전 = High-order recognition 고차원적인 인식도 담당
+
+디지털화 과정
+sampling > quantizing > coding
+표본화    >  양자화    >  부호화 (jpg, bmp)
+sampling -> 기계가 받아 들일 수 있도록 아날로그 신호를 적정 개수로 나누어서 받아들이는 과정
+정보량이 무한한 아날로그 정보를 유한한 디지털 정보로 바꾸는 작업
+
+화소 개당 RGB필터가 각각 존재하고 그 필터에 판넬이 붙어있는데, 필터를 통과한 각 색의 빛이 판넬에 광전효과로 인해서
+자유전자가 튀어나와 전류가 흐르게 되고 이 전류를 측정하여 영상을 포맷함
+
+sampling 
+z
+x y
+intensity
+voxel : volume ele -> MRI CT
+pixel에서는 최좌측상단에 있는 점이 0.0
+PPI : 대각선에서 있는 픽셀 수
+각 x,y의 위치값에 대한 아날로그 데이터를 어떻게 나눌것 인가
+
+
+quantization
+픽셀 하나의 이야기
+상이 어떻게 생길것인가
+강도를 어떻게 나눌것인가 (색 등)
+256색
+Uint8(unsigned int 8 bit)
+
+coding 부호화
+이미지를 저장하는 방식
+JPG lossy(손실 압축)
+
+PNG,TIF 무손실 압축
+데이터 용량은 JPG보다 크지만 손실이 없다
+BMP
+압축을 안함
+
+bitmap: PNG
+vector image : PDF
+
+opencv는 영상좌표(x,y) 사용 결과값은 numpy 행렬위치(columns,row)반환
+Intensity는 3가지 (r,g,b)의 정보가 함유
+
+binary image : intensity가 0과 1만 존재하는 이미지
+grayscale: 흑백
+
+binary image Text, mask image
+dithering을 이용해서 점의 밀도를 이용해서 greyscale 이미지를 표현할 수 있다
+Halftoning을 이용해서 점의 크기를 이요앻서 greyscale 이미지를 표현할 수 있다. -> printer
+
+color image
+24비트의 색 intensity
+빛의 3원색 Red Blue Yellow
+Cyan Margenta Yellow
+청록  적보라     노란
+CMY는 다 더하면 검은색
+RGB는 다 더하면 흰색
+
+
+indexed color 8비트로 색intensity를 표현 lookup table(LUT)로 색상을 찾아서 표현
+gif 영상처리에 사용안함
+
