@@ -56,7 +56,7 @@ Cyan Margenta Yellow
 청록  적보라     노란
 CMY는 다 더하면 검은색
 RGB는 다 더하면 흰색
-
+OpenCV는 BGR 사용
 
 indexed color 8비트로 색intensity를 표현 lookup table(LUT)로 색상을 찾아서 표현
 gif 영상처리에 사용안함
