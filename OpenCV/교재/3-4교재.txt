@@ -20,7 +20,7 @@ pattern classification : Machine Learning
 
 thinness ratio = 4pi * pi * r^2 / ((2 * pi * r ) ^2) 
 머신러닝 : 피쳐를 본인이 만들어서 넣어줘야함
-딥러닝 : 데이터 주면 알아서함
+딥러닝 : 피쳐를 컴퓨터가 제작함
 
 image restoration 영상 복원
 영상이 왜곡이 일어 났고, 그리고 원인이 되는 함수를 알고 있을때 함수의 역함수를 이용해서 영상을 복원
