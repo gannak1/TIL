@@ -1,0 +1,56 @@
+컴퓨터 비전
+공장, 
+DNA 분석, 지문인식, 망막인식
+의료
+등등에서 광범위하게 사용됨
+
+크기, 배경, 각도, 밝기,그림자 등등의 차이점으로 같은 물체라도 사진구도나 여러 변수에 의해서 Matrix로 인식
+
+컴퓨터 비전의 과정
+
+image enhancement : 이미지 개선(너무 어두운것을 개선) histogram equalization
+
+image segmentation 이미지 분할
+
+----- 여기까지 이미지 프로세싱 영상처리
+
+feature extraction
+
+pattern classification : Machine Learning
+
+thinness ratio = 4pi * pi * r^2 / ((2 * pi * r ) ^2) 
+머신러닝 : 피쳐를 본인이 만들어서 넣어줘야함
+딥러닝 : 피쳐를 컴퓨터가 제작함
+
+image restoration 영상 복원
+영상이 왜곡이 일어 났고, 그리고 원인이 되는 함수를 알고 있을때 함수의 역함수를 이용해서 영상을 복원
+
+image enhancement 영상 개선
+영상 왜곡이 일어나는 직접적인 함수를 모르지만 영상을 좋게 만드는 방법
+흐리거나(blur) 너무 어두운 이미지 등을 눈에 보기 좋게 영상을 만듬
+
+image compression
+이미지 압축
+
+
+point operation
+화소단위의 영상처리
+픽셀당 산술연산
+
+Area operation
+픽셀 주변의 영상들을 모두 고려
+
+point operation
+
+장점 : 영상의 밝기(image brightness)가 변함, 영상의 대조도(image contrast)가 좋아진다
+contrast 두 인접 픽셀간의 차이
+
+histogram 선명도
+두 픽셀간의 값의 차이
+
+difference
+눈으로 구분이 불가능한 다른 영상에서도 픽셀끼리 빼서 확인이 가능
+주차장에서 주로 사용 아무런 변화가 없는 것에 머신러닝을 하면 용량등의 문제가 생기므로 3초마다 변화를 측정해서
+주차하는 차를 확인
+binary 
+after thresholding 역치

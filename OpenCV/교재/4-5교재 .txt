@@ -1,0 +1,7 @@
+앞장은 BeautifulSoup 관련 명령어
+
+영상의 좌표와 넘파이의 좌표 차이
+
+균일분포 pdf probability density function -적분 > cdf cumulative distribution function
+
+equalization, Normalization 한국말로 뭘로 나오는지

@@ -1,0 +1,28 @@
+아나콘다 기초 사용법
+conda --version : 아나콘다 버전 확인하기
+
+conda update conda : 아나콘다 업데이트
+
+conda update --all : 파이썬 패키지를 최신 버전으로 업데이트
+
+conda list : 설치된 파이썬 패키지 리스트로 확인하기
+
+conda env list : 자신이 만든 가상환경 리스트로 확인하기
+
+conda search python : 사용할 수 있는 파이썬 버전 확인하기
+
+conda create --name 환경이름 python=3.x : 파이썬 3.x버전의 가상환경 생성하기
+
+conda remove --name 환경이름 : 가상환경 삭제하기
+
+conda install --name 환경이름 패키지이름 : 원하는 파이썬 패키지를 가상환경에 설치하기 (일반적인 방법)
+
+conda install --name 환경이름 패키지이름==버전 : 원하는 파이썬 패키지를 특정 버전으로 가상환경에 설치하기
+
+activate 환경이름 : 가상환경에 진입하기
+
+conda deactivate : 가상환경에서 빠져나오기
+
+# --name을 -n으로 작성 가능합니다.
+
+https://toward-the-future.tistory.com/entry/Python-%ED%8C%8C%EC%9D%B4%EC%B0%B8Pycharm-%EC%84%A4%EC%B9%98-%EB%B0%8F-%EC%95%84%EB%82%98%EC%BD%98%EB%8B%A4anaconda-%EA%B0%80%EC%83%81%ED%99%98%EA%B2%BD-%EC%97%B0%EB%8F%99%ED%95%98%EA%B8%B0
