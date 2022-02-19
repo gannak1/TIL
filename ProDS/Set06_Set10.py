@@ -39,9 +39,11 @@ Created on 2021
 # sqft_lot15 / 15개의 인근 주택의 평균 대지 면적 / Double
 # =============================================================================
 # =============================================================================
-
-
-
+import pandas as pd
+import numpy as np
+data6 = pd.read_csv('./Dataset/DataSet_06.csv')
+data6
+data6.info()
 #%%
 
 # =============================================================================
@@ -51,8 +53,14 @@ Created on 2021
 # =============================================================================
 
 
+q1_1 = data6[data6.waterfront == 1]['price'].mean()
+q1_0 = data6[data6.waterfront == 0]['price'].mean()
+int(abs(q1_1 - q1_0))
+# 답 : 1167272
 
-
+q1 = data6.groupby(by = 'waterfront').mean().price
+round(q1[1] - q1[0])
+# 답 : 1167273
 
 
 
@@ -67,8 +75,16 @@ Created on 2021
 # 
 # =============================================================================
 
+var_list = ['price', 'bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors', 'yr_built']
 
+q2 = data6[var_list].corr().drop('price')['price']
+abs(q2).idxmax(),abs(q2).idxmin()
+# max : 'sqft_living', min : 'yr_built')
 
+var_list = ['price', 'bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors', 'yr_built']
+data6[var_list].corr()[data6[var_list].corr() != 1].price.idxmax()
+data6[var_list].corr()[data6[var_list].corr() != 1].price.idxmin()
+# 최대 : sqft_living, 최소 : yr_built
 
 
 
@@ -94,12 +110,38 @@ Created on 2021
 # from statsmodels.formula.api import ols
 # =============================================================================
 
+var_list = data6.columns.drop(['id','date','zipcode','price'])
+
+from statsmodels.formula.api import ols
+
+form1 = 'price~' + '+'.join(var_list)
+
+ols1 = ols(form1, data6).fit()
+
+# 각 독립변수별 유의성  검정
+q3_out = ols1.pvalues.drop('Intercept')
+(q3_out < 0.05).sum()
+
+# q3_out[q3_out < 0.05]
+
+q3_sel_list = q3_out.index[(q3_out < 0.05)]
+
+(ols1.params[q3_sel_list] < 0).sum() # 2
+# (ols.params < 0).sum() # 전체대상
+
+# 답: 13, 2
 
 
+from sklearn.linear_model import LinearRegression
 
-
-
-
+lm = LinearRegression()
+data6.columns
+q1=data6.drop(['id','date','zipcode'],axis = 1)
+lm.fit(q1.drop('price',axis=1),q1.price)
+q1.columns
+(abs(lm.coef_) > 1).sum()
+((abs(lm.coef_) > 1) & (lm.coef_ < 0)).sum()
+# 13개,2개 
 
 #%%
 
@@ -217,6 +259,11 @@ Created on 2021
 # =============================================================================
 # =============================================================================
 
+import pandas as pd
+import numpy as np
+
+data8= pd.read_csv('./Dataset/Dataset_08.csv')
+data8.columns
 # =============================================================================
 # (참고)
 # #1
@@ -226,15 +273,17 @@ Created on 2021
 # from sklearn.linear_model import LinearRegression
 # =============================================================================
 
+
 #%%
 
 # =============================================================================
 # 1.각 주(State)별 데이터 구성비를 소수점 둘째 자리까지 구하고, 알파벳 순으로
 # 기술하시오(주 이름 기준).
 # (답안 예시) 0.12, 0.34, 0.54
-# =============================================================================
+# ============================================================================= > groupby, value_counts
 
-
+data8['State'].value_counts(normalize = True).sort_index().values
+# 답 : [0.34, 0.32, 0.34]
 
 
 
@@ -246,12 +295,9 @@ Created on 2021
 # 차이값은 소수점 이하는 버리고 정수부분만 기술하시오. (답안 예시) 1234
 # =============================================================================
 
-
-
-
-
-
-
+q2 = data8.groupby('State')['Profit'].mean()
+q2.max() - q2.min()
+# 답 : 14868
 
 #%%
 
@@ -262,18 +308,25 @@ Created on 2021
 # 주이고 그 값은 무엇인가? (반올림하여 소수점 둘째 자리까지 기술하시오)
 # - (MAPE = Σ ( | y - y ̂ | / y ) * 100/n )
 # (답안 예시) ABC, 1.56
-# =============================================================================
+# ============================================================================= for로 회귀분석
 
+state_list = data8.State.unique()
+# ['New York', 'California', 'Florida']
+var_list = ['RandD_Spend', 'Administration', 'Marketing_Spend']
 
+from sklearn.linear_model import LinearRegression
 
+q3_out = []
 
-
-
-
-
-
-
-
+for i in state_list:
+    temp = data8[data8.State == i]
+    lm = LinearRegression().fit(temp[var_list],temp['Profit'])
+    pred = lm.predict(temp[var_list])    
+    mape = (abs(temp['Profit'] - pred) / temp['Profit']).sum() * 100 / len(temp)
+    q3_out.append([i, mape])
+q3_out = pd.DataFrame(q3_out,columns = ['state','mape'])
+q3_out.loc[q3_out.mape.idxmin(),:]
+# 답 : Florida, 5.71
 
 #%%
 
@@ -418,7 +471,13 @@ Created on 2021
 # from sklearn.linear_model import LinearRegression
 # =============================================================================
 
+import pandas as pd
+import numpy as np
 
+data10 = pd.read_csv('./Dataset/Dataset_10.csv')
+
+data10 = data10.dropna(how='all',axis = 1)
+data10
 #%%
 
 # =============================================================================
@@ -428,18 +487,31 @@ Created on 2021
 # 기술하시오.
 # (모델별 평균 → 일평균 → 최대최소 비율 계산) (답안 예시) 0.12
 # =============================================================================
+data10.columns
+# ['model', 'engine_power', 'age_in_days', 'km', 'previous_owners','price']
+
+# 이전 소유자 수가 한 명이고, 엔진 파워가 51인 차에 대해
+
+q1 = data10[(data10.previous_owners == 1) & (data10.engine_power == 51)]
+
+len(data10)
+len(q1)
+
+# 모델별 하루 평균 운행거리를 산출
+
+# (1) 모델별 평균
+q1_tab = q1.groupby('model')['age_in_days','km'].mean()
+
+# (3) 일평균
+
+q1_tab['km_per_day'] = q1_tab['km'] / q1_tab['age_in_days']
 
 
+# (3) 최대최소  비율 계산
 
+q1_tab['km_per_day'].min() / q1_tab['km_per_day'].max()
 
-
-
-
-
-
-
-
-
+# 답 : 0.97
 
 #%%
 
@@ -452,15 +524,32 @@ Created on 2021
 # (답안 예시) 0.23, Y
 # =============================================================================
 
+# 운행 일수에 대한 운행거리를 산출
+
+q2 = data10.copy()
+
+q2['km_per_day'] = q2['km'] / q2['age_in_days']
+
+# 위 1번 문제에서 가장 큰 값을 가지고 있던 모델과 가장 낮은 값을 가지고 있던 모델
+
+max_g = q1_tab['km_per_day'].idxmax()
+min_g = q1_tab['km_per_day'].idxmin()
 
 
+# 모델 간의 운행 일수 대비 운행거리 평균이 다른지
+# 적절한 통계 검정을 수행 : ttest
+q2
+from scipy.stats import ttest_ind # 등분산성 가정
+
+q2_out = ttest_ind(q2[q2.model == max_g]['km_per_day'],
+          q2[q2.model == min_g]['km_per_day'],
+          equal_var = True)
 
 
+# p-value를 소수점 세자리 이하는 버리고 
 
-
-
-
-
+q2_out.pvalue
+0.13
 #%%
 
 # =============================================================================
@@ -474,19 +563,30 @@ Created on 2021
 # model = pop이고 이전 소유자수가 2명인 데이터만을 이용하여 회귀모델을 생성하시오.
 
 
+# (1) 이전 소유자수가 2인 데이터 필터링
+q3 = data10[data10.previous_owners == 2]
 
+# (2) 독립변수 목록 & 모델 목록
 
+var_list =[ 'engine_power', 'age_in_days', 'km']
+model_list = q3.model.unique() # ['lounge', 'sport','pop']
 
+# (3) 반복적으로 모델 생성
 
+from sklearn.linear_model import LinearRegression
 
+for i in model_list:
+    temp = q3[q3.model == i]
+    globals()['lm_'+i] = LinearRegression().fit(temp[var_list],temp['price'])
 
+# (4) 예측: 예측 시 나온 모델명의 모델을 호출해서 사용
 
+pred = lm_pop.predict([[51,400,9500]])
+pred
+# 답 : [10367.53433763]
 
-
-
-
-
-
-
+pred2 = lm_pop.predict(pd.DataFrame({'engine_power':[51],'age_in_day':[400],'km':[9500]}))
+pred2
+# 답 : [10367.53433763]
 
 

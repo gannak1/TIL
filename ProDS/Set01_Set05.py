@@ -354,8 +354,9 @@ round(abs(q2_out.statistic),3)
 bartlett(g_m,g_f) # -> pvalue
 # H0 : 등분산 귀무가설
 # H1 : 등분산이 아니다(이분산) 대립가설
+q2_out.pvalue < 0.01 # 기각
 
-
+# 답 : Y
 #%%
 
 # =============================================================================
@@ -459,15 +460,46 @@ q1_out['TIME']['Value']
 # =============================================================================
 # 2. 한국 인근 국가 가운데 식생의 유사성이 상대적으로 높은 일본(JPN)과 비교하여, 연도별
 # 소비량에 평균 차이가 있는지 분석하고자 한다.
-# - 두 국가의 육류별 소비량을 연도기준으로 비교하는 대응표본 t 검정을 수행하시오.
+# - 두 국가의 육류별 소비량을 연도기준으로 비교하는 대응표본 t 검정을 수행하시오. 결측치를 제거하고 사용
 # - 두 국가 간의 연도별 소비량 차이가 없는 것으로 판단할 수 있는 육류 종류를 모두
 # 적으시오. (알파벳 순서) (답안 예시) BEEF, PIG, POULTRY, SHEEP
 # =============================================================================
 
 
+# 한국, 일본 필터링
+q2 = data4[data4['LOCATION'].isin(['KOR','JPN'])]
+
+# 육류 종류 목록
+sub_list = q2.SUBJECT.unique()
+
+# 참고
+temp = q2[q2.SUBJECT == 'BEEF']
+q2_tab = pd.pivot_table(temp,index='TIME',
+                        columns='LOCATION',
+                        values = 'Value')
 
 
 
+
+# 반복문을 이용해서 육류 종류별로 빈도 작성 후 결측치 포함 행 제거
+from scipy.stats import ttest_rel
+
+q2_out = []
+
+for i in sub_list:
+    temp = q2[q2.SUBJECT == i]
+    q2_tab = pd.pivot_table(temp,index='TIME',
+                            columns='LOCATION',
+                            values = 'Value').dropna()
+    ttest_out = ttest_rel(q2_tab['KOR'],q2_tab['JPN'])
+    pvalue = ttest_out.pvalue
+    q2_out.append([i,pvalue])
+
+q2_out = pd.DataFrame(q2_out,columns = ['var','pvalue'])
+
+q2_out[q2_out.pvalue >= 0.05]
+
+# 답 : POULTRY
 
 #%%
 
@@ -480,16 +512,46 @@ q1_out['TIME']['Value']
 # 
 # =============================================================================
 
+data4.columns
 
+q3 = data4[data4.LOCATION == 'KOR']
 
+sub_list = q3.SUBJECT.unique()
 
+from sklearn.linear_model import LinearRegression
 
+q3_out = []
+for i in sub_list:
+    temp=q3[q3.SUBJECT == i]
+    lm = LinearRegression().fit(temp[['TIME']],temp['Value'])
+    r2_score = lm.score(temp[['TIME']],temp['Value'])
+    pred = lm.predict(temp[['TIME']])
+    temp['Value'].shape
+    type(temp['Value'])
+    # (MAPE = Σ ( | y - y ̂ | / y ) * 100/n ))
+    mape = (abs(temp['Value'] - pred) / temp['Value']).sum() * 100 / len(temp)
+    q3_out.append([i,r2_score,mape])
 
+q3_out = pd.DataFrame(q3_out,columns = ['sub','r2_score','mape'])
 
+q3_out.loc[q3_out.r2_score.idxmax(),'mape']
+# q3_out.iloc[q3_out.r2_score.idxmax(),2]
 
+# 답 : 5.78
 
-
-
+# q3[['TIME']].shape
+# vs
+# q3['TIME'].values.reshape(-1,1)
+i = 'BEEF'
+temp=q3[q3.SUBJECT == i]
+lm = LinearRegression().fit(temp[['TIME']],temp[['Value']])
+r2_score = lm.score(temp[['TIME']],temp['Value'])
+pred = lm.predict(temp[['TIME']]).reshape(-1,)
+temp['Value']
+# (MAPE = Σ ( | y - y ̂ | / y ) * 100/n ))
+mape = (abs(temp['Value'] - pred[0]) / temp['Value']).sum() * 100 / len(temp)
+mape
+q3_out.append([i,r2_score,mape])
 
 
 #%%
@@ -537,7 +599,12 @@ q1_out['TIME']['Value']
 
 
 #%%
+import pandas as pd
+import numpy as np
 
+data5 = pd.read_csv('./Dataset/Dataset_05.csv',na_values=['?',' ','NA'])
+data5.info()
+data5.columns
 # =============================================================================
 # 1.위의 표에 표시된 데이터 타입에 맞도록 전처리를 수행하였을 때, 데이터 파일 내에
 # 존재하는 결측값은 모두 몇 개인가? 숫자형 데이터와 문자열 데이터의 결측값을
@@ -545,9 +612,9 @@ q1_out['TIME']['Value']
 # (String 타입 변수의 경우 White Space(Blank)를 결측으로 처리한다) (답안 예시) 123
 # =============================================================================
 
+data5.isnull().sum().sum()
 
-
-
+# 1166
 
 
 #%%
@@ -559,8 +626,20 @@ q1_out['TIME']['Value']
 # (답안 예시) 0.2345, N
 # =============================================================================
 
+q2 = data5.dropna()
 
+q2_tab = pd.crosstab(index = q2.Gender,columns = q2.Segmentation)
 
+from scipy.stats import chi2_contingency
+
+q2_out = chi2_contingency(q2_tab)
+
+q2_out[1]
+round(q2_out[1],4)
+
+round(q2_out[1],4) < 0.05
+
+# 0.0031, Y
 
 
 #%%
@@ -582,6 +661,26 @@ q1_out['TIME']['Value']
 # 기술하시오.
 # (답안 예시) 0.12
 # =============================================================================
+
+q3 = q2[q2.Segmentation.isin(['A','D'])]
+
+from sklearn.model_selection import train_test_split
+
+train, test = train_test_split(q3,train_size = 0.7,random_state = 123)
+
+var_list = ['Age_gr', 'Gender', 'Work_Experience', 'Family_Size','Ever_Married', 'Graduated', 'Spending_Score']
+
+from sklearn.tree import DecisionTreeClassifier
+
+dt = DecisionTreeClassifier(max_depth = 7,random_state = 123)
+dt.fit(train[var_list],train['Segmentation'])
+q3_out = dt.score(test[var_list],test['Segmentation'])
+
+
+
+
+
+
 
 
 
