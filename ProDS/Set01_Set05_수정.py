@@ -297,7 +297,7 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 
 # 답: Na_to_K , 14.829
 
-
+dt.feature_importances_
 
 #%%
 
@@ -325,7 +325,10 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # =============================================================================
 # =============================================================================
 
+import pandas as pd
+import numpy as np
 
+data3=pd.read_csv('Dataset_03.csv')
 
 #%%
 
@@ -335,15 +338,24 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # 정의할 때, 이상치에 해당하는 데이터는 몇 개인가? (답안 예시) 10
 # =============================================================================
 
+q1=data3.copy()
+
+q1['forehead_ratio']=q1['forehead_width_cm']/q1['forehead_height_cm']
+
+xbar=q1['forehead_ratio'].mean()
+std=q1['forehead_ratio'].std()
+
+UB=xbar + 3 * std
+LB=xbar - 3 * std
+
+# 이상치 데이터 필터링
+q1[(q1['forehead_ratio'] < LB)  | (q1['forehead_ratio'] > UB)]
+
+# 이상치 수
+((q1['forehead_ratio'] < LB)  | (q1['forehead_ratio'] > UB)).sum()
 
 
-
-
-
-
-
-
-
+# 답 : 3
 #%%
 
 # =============================================================================
@@ -354,16 +366,33 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # - 신뢰수준 99%에서 양측 검정을 수행하고 결과는 귀무가설 기각의 경우 Y로, 그렇지
 # 않을 경우 N으로 답하시오. (답안 예시) 1.234, Y
 # =============================================================================
+q1.columns
+# ['long_hair', 'forehead_width_cm', 'forehead_height_cm', 'nose_wide',
+#       'nose_long', 'lips_thin', 'distance_nose_to_lip_long', 'gender',
+#       'forehead_ratio']
+q1.gender.unique()
+
+g_m=q1[q1.gender=='Male']['forehead_ratio']
+g_f=q1[q1.gender=='Female']['forehead_ratio']
 
 
+from scipy.stats import ttest_ind, bartlett
+
+q2_out=ttest_ind(g_m, g_f, equal_var=False)
+
+round(abs(q2_out.statistic),3 )
+
+# 답: 2.999
+
+q2_out.pvalue < 0.01
+
+# 답: Y
 
 
-
-
-
-
-
-
+# [참고] 등분산 검정
+bartlett(g_m, g_f)
+# H0 : 등분산
+#H1 : 등분산이 아니다(이분산)
 
 
 #%%
@@ -389,16 +418,28 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # =============================================================================
 
 
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, classification_report
 
 
+train, test=train_test_split(data3, test_size=0.3, random_state=123)
 
+var_list=data3.columns.drop('gender')
 
+logit=LogisticRegression().fit(train[var_list], train['gender'])
 
+dir(logit)
 
+q3_pred=logit.predict(test[var_list])
 
+q3_pred_pr=logit.predict_proba(test[var_list])
 
+precision_score(test['gender'], q3_pred, pos_label='Male')
 
+# 답: 0.96
 
+print(classification_report(test['gender'], q3_pred))
 
 
 #%%
@@ -432,6 +473,12 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 
 #%%
 
+import pandas as pd
+import numpy as np
+
+data4=pd.read_csv('Dataset_04.csv')
+
+
 # =============================================================================
 # 1.한국인의 1인당 육류 소비량이 해가 갈수록 증가하는 것으로 보여 상관분석을 통하여
 # 확인하려고 한다. 
@@ -442,10 +489,16 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # =============================================================================
 
 
+data4.columns
+# ['LOCATION', 'SUBJECT', 'TIME', 'Value']
 
+q1=data4[data4.LOCATION=='KOR']
 
+q1_out=q1.groupby('TIME')['Value'].sum().reset_index().corr()
 
+q1_out['TIME']['Value']
 
+# 답: 0.96
 
 #%%
 
@@ -458,8 +511,40 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # =============================================================================
 
 
+# 한국, 일본 필터링
+q2=data4[data4.LOCATION.isin(['KOR', 'JPN'])]
+
+# 육류 종류 목록
+sub_list=q2.SUBJECT.unique()
+# ['BEEF', 'PIG', 'POULTRY', 'SHEEP']
 
 
+# 참고
+temp=q2[q2.SUBJECT=='BEEF']
+q2_tab=pd.pivot_table(temp, index='TIME',
+                          columns='LOCATION',
+                          values='Value')
+
+
+# 반복문을 이용해서 육류 종류별로 빈도 작성 후 결측치 포함 행 제거
+from scipy.stats import ttest_rel
+
+q2_out=[]
+
+for i in sub_list:
+    temp=q2[q2.SUBJECT==i]
+    q2_tab=pd.pivot_table(temp, index='TIME',
+                          columns='LOCATION',
+                          values='Value').dropna()
+    ttest_out=ttest_rel(q2_tab['KOR'], q2_tab['JPN'])
+    pvalue=ttest_out.pvalue
+    q2_out.append([i, pvalue])
+
+q2_out=pd.DataFrame(q2_out, columns=['var', 'pvalue'])
+
+q2_out[q2_out.pvalue >= 0.05 ]
+
+# 답: POULTRY
 
 
 #%%
@@ -472,17 +557,35 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # (MAPE = Σ ( | y - y ̂ | / y ) * 100/n ))
 # 
 # =============================================================================
+data4.columns
+
+q3=data4[data4.LOCATION=='KOR']
+
+sub_list=q3.SUBJECT.unique()
+
+from sklearn.linear_model import LinearRegression
+
+q3_out=[]
+for i in sub_list:
+    temp=q3[q3.SUBJECT == i]
+    lm=LinearRegression().fit(temp[['TIME']], temp['Value'])
+    r2_score=lm.score(temp[['TIME']], temp['Value'])
+    pred=lm.predict(temp[['TIME']])
+    # MAPE = Σ ( | y - y ̂ | / y ) * 100/n
+    mape = (abs(temp['Value'] - pred) / temp['Value']).sum() * 100 / len(temp)
+    q3_out.append([i, r2_score, mape])
+
+q3_out=pd.DataFrame(q3_out, columns=['sub', 'r2_score', 'mape'])
+
+q3_out.loc[q3_out.r2_score.idxmax(),'mape']
+# q3_out.iloc[q3_out.r2_score.argmax(),2]
+
+# 답: 5.78
 
 
-
-
-
-
-
-
-
-
-
+# [참고]
+q3[['TIME']].shape
+q3['TIME'].values.reshape(-1, 1).shape
 
 
 #%%
@@ -531,6 +634,16 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 
 #%%
 
+
+import pandas as pd
+import numpy as np
+
+data5=pd.read_csv('Dataset_05.csv', na_values=['?', ' ', 'NA'])
+data5.info()
+data5.columns
+# ['ID', 'Age', 'Age_gr', 'Gender', 'Work_Experience', 'Family_Size',
+#       'Ever_Married', 'Graduated', 'Profession', 'Spending_Score', 'Var_1',
+#       'Segmentation']
 # =============================================================================
 # 1.위의 표에 표시된 데이터 타입에 맞도록 전처리를 수행하였을 때, 데이터 파일 내에
 # 존재하는 결측값은 모두 몇 개인가? 숫자형 데이터와 문자열 데이터의 결측값을
@@ -538,9 +651,9 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # (String 타입 변수의 경우 White Space(Blank)를 결측으로 처리한다) (답안 예시) 123
 # =============================================================================
 
+data5.isnull().sum().sum()
 
-
-
+# 답: 1166
 
 
 #%%
@@ -552,9 +665,20 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # (답안 예시) 0.2345, N
 # =============================================================================
 
+q2=data5.dropna()
 
+q2_tab=pd.crosstab(index=q2.Gender,columns=q2.Segmentation)
 
+from scipy.stats import chi2_contingency
 
+q2_out=chi2_contingency(q2_tab)
+
+q2_out[1]  #  0.003125001283622576
+round(q2_out[1], 4) # 0.0031
+
+round(q2_out[1], 4) < 0.05  # Y
+
+# 답: 0.0031, Y
 
 #%%
 
@@ -576,5 +700,20 @@ print(export_text(dt, feature_names=var_list, decimals=3))
 # (답안 예시) 0.12
 # =============================================================================
 
+q3=q2[q2.Segmentation.isin(['A', 'D'])]
+
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+
+train, test= train_test_split(q3, test_size=0.3, random_state=123)
+
+var_list=['Age_gr', 'Gender', 'Work_Experience', 'Family_Size', 
+          'Ever_Married', 'Graduated', 'Spending_Score']
+
+dt=DecisionTreeClassifier(max_depth=7, random_state=123)
+dt.fit(train[var_list], train['Segmentation'])
+q3_out=dt.score(test[var_list], test['Segmentation'])
+
+# 답: 0.68
 
 
